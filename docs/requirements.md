@@ -6,7 +6,6 @@
 - Optimal Electricity Usage Recommendations: Suggest low-carbon time slots for energy use.
 - Task Scheduling: Users can schedule tasks (e.g., laundry, EV charging) to run during recommended periods.
 - Dashboard View: Visual graphs showing historical carbon data and user habits.
-- Responsive Interface: Works seamlessly on desktop, tablet, and mobile.
 - User Reminders: Notify users of upcoming scheduled tasks via web or email.
   
 ## Non-Functional Requirements
