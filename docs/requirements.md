@@ -19,6 +19,7 @@ Develop a backend algorithm in Python (Flask) to analyze real-time carbon intens
 Clearly present recommendations on the frontend dashboard using color-coded indicators built with HTML/CSS, enhanced by JavaScript interactivity.
 
 Should Have
+
 4. Task Scheduling for Energy-Intensive Activities
 Allow users to schedule tasks like laundry or EV charging through intuitive HTML forms styled with Bootstrap.
 Store scheduled tasks securely in a SQLite database, managing task persistence with Flask SQLAlchemy ORM.
@@ -29,11 +30,13 @@ Record historical carbon intensity data and user activities in a structured SQLi
 Render interactive visualizations of historical and user-specific data on the frontend using JavaScript with Chart.js, embedded into HTML pages styled by Bootstrap.
 
 Could Have
+
 6. User Reminders and Notifications
 Implement web-based notifications using JavaScript’s Web Notification API to remind users of upcoming tasks or optimal usage windows.
 For email notifications, use SMTP integration in Flask (e.g., via Flask-Mail) to deliver reminders, managed in the backend with scheduled tasks (APScheduler).
 
 Would Like to Have
+
 7. Enhanced User Analytics and Insights
 Utilize Python analytics libraries (Pandas, scikit-learn) on Flask backend to analyze and predict user electricity usage patterns.
 Generate personalized insights, displayed as enhanced visualizations (e.g., predictive charts via Chart.js), providing actionable analytics to further reduce carbon footprints.
