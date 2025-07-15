@@ -18,51 +18,65 @@
             background-color: #f8f9fa;
         }
 
-        .wireframe-note {
-            background: #fff3cd;
-            border: 2px dashed #856404;
-            padding: 10px;
-            margin: 10px;
-            text-align: center;
-            font-size: 14px;
-            color: #856404;
+
+
+        /* Container for consistent spacing */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
 
-        /* Header/Navigation - 修改为更窄的设计 */
+        /* Header/Navigation - 优化响应式设计 */
         .navbar {
             background: #e9ecef;
             border: 2px solid #dee2e6;
-            padding: 8px 20px; /* 减少上下padding从15px到8px */
+            padding: 8px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+        }
+
+        .navbar .container {
             display: flex;
             align-items: center;
-            height: 50px; /* 固定导航栏高度 */
-            width: 100%;
-            position: relative;
+            justify-content: space-between;
+            min-height: 50px;
         }
 
         .logo {
             border: 1px dashed #6c757d;
-            padding: 6px 15px; /* 减少logo的padding */
+            padding: 6px 15px;
             font-weight: bold;
-            font-size: 16px; /* 稍微调整字体大小 */
+            font-size: 16px;
+            text-decoration: none;
+            color: inherit;
+            white-space: nowrap;
         }
 
         .nav-buttons {
             display: flex;
-            gap: 8px; /* 稍微减少按钮间距 */
+            gap: 8px;
             align-items: center;
-            margin-left: auto; /* 强制推到最右边 */
         }
 
         .btn-wireframe {
             border: 1px solid #6c757d;
-            padding: 6px 12px; /* 减少按钮padding */
+            padding: 6px 12px;
             background: white;
             cursor: pointer;
             text-decoration: none;
             color: #333;
-            font-size: 14px; /* 调整按钮字体大小 */
-            border-radius: 4px; /* 添加圆角让按钮更精致 */
+            font-size: 14px;
+            border-radius: 4px;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .btn-wireframe:hover {
+            background: #f8f9fa;
+            transform: translateY(-1px);
         }
 
         .btn-primary {
@@ -72,11 +86,15 @@
             font-weight: 500;
         }
 
-        /* Hero Section */
+        .btn-primary:hover {
+            background: #cce7ff;
+        }
+
+        /* Hero Section - 改进响应式 */
         .hero {
             background: #f8f9fa;
             border: 2px solid #dee2e6;
-            padding: 60px 20px;
+            padding: 60px 0;
             text-align: center;
             margin: 20px;
         }
@@ -86,7 +104,7 @@
             padding: 20px;
             margin: 20px auto;
             max-width: 600px;
-            font-size: 28px;
+            font-size: clamp(20px, 5vw, 28px);
         }
 
         .hero p {
@@ -94,38 +112,49 @@
             padding: 15px;
             margin: 20px auto;
             max-width: 500px;
-            font-size: 16px;
+            font-size: clamp(14px, 3vw, 16px);
         }
 
         .cta-button {
             border: 2px solid #28a745;
             background: #d4edda;
             padding: 15px 30px;
-            font-size: 18px;
+            font-size: clamp(16px, 4vw, 18px);
             margin: 20px;
+            display: inline-block;
+            transition: all 0.3s ease;
         }
 
-        /* Live Preview Section */
-        .live-preview {
+        .cta-button:hover {
+            background: #c3e6cb;
+            transform: translateY(-2px);
+        }
+
+        /* Section styling */
+        .section {
             background: white;
             border: 2px solid #dee2e6;
             margin: 20px;
-            padding: 40px 20px;
+            padding: 40px 0;
         }
 
         .section-title {
             text-align: center;
             border: 1px dashed #6c757d;
             padding: 15px;
-            margin-bottom: 30px;
+            margin: 0 auto 30px;
+            max-width: 600px;
+            font-size: clamp(18px, 4vw, 24px);
         }
 
+        /* Live Preview Section - 改进网格布局 */
         .preview-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
             max-width: 800px;
             margin: 0 auto;
+            padding: 0 20px;
         }
 
         .preview-card {
@@ -133,14 +162,21 @@
             padding: 20px;
             text-align: center;
             background: #f8f9fa;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .preview-card:hover {
+            transform: translateY(-5px);
         }
 
         .current-intensity {
             border: 1px dashed #28a745;
             padding: 20px;
             margin: 10px 0;
-            font-size: 24px;
+            font-size: clamp(18px, 5vw, 24px);
             background: #d4edda;
+            border-radius: 8px;
         }
 
         .recommendation-box {
@@ -148,22 +184,17 @@
             padding: 15px;
             margin: 10px 0;
             background: #fff3cd;
+            border-radius: 8px;
         }
 
-        /* Features Section */
-        .features {
-            background: white;
-            border: 2px solid #dee2e6;
-            margin: 20px;
-            padding: 40px 20px;
-        }
-
+        /* Features Section - 改进网格布局 */
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
+            padding: 0 20px;
         }
 
         .feature-box {
@@ -171,6 +202,12 @@
             padding: 20px;
             text-align: center;
             background: #f8f9fa;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-box:hover {
+            transform: translateY(-5px);
         }
 
         .feature-icon {
@@ -182,6 +219,8 @@
             align-items: center;
             justify-content: center;
             background: #e7f3ff;
+            border-radius: 50%;
+            font-size: 24px;
         }
 
         /* Chart Preview */
@@ -201,6 +240,9 @@
             margin: 20px auto;
             max-width: 800px;
             background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            font-size: clamp(14px, 3vw, 16px);
         }
 
         /* Call to Action */
@@ -210,6 +252,13 @@
             margin: 20px;
             padding: 40px 20px;
             text-align: center;
+        }
+
+        .final-cta h2 {
+            border: 1px dashed #28a745;
+            padding: 20px;
+            margin-bottom: 20px;
+            font-size: clamp(18px, 4vw, 24px);
         }
 
         /* Footer */
@@ -228,145 +277,306 @@
             margin: 0 auto;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .preview-grid {
-                grid-template-columns: 1fr;
+        /* Status badge */
+        .status-badge {
+            background: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Responsive Design - 细化断点 */
+
+        /* 平板设备 (768px - 1024px) */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 0 15px;
             }
 
-            .navbar {
+            .hero {
+                padding: 40px 0;
+            }
+
+            .section {
+                padding: 30px 0;
+            }
+        }
+
+        /* 移动设备 (768px 以下) */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 10px;
+            }
+
+            .navbar .container {
                 flex-direction: column;
-                gap: 8px;
-                height: auto;
-                padding: 10px 20px;
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .nav-buttons {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .hero {
+                margin: 10px;
+                padding: 30px 0;
+            }
+
+            .section {
+                margin: 10px;
+                padding: 20px 0;
+            }
+
+            .preview-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 0 10px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 0 10px;
+            }
+
+            .chart-preview {
+                margin: 10px;
+                padding: 20px 10px;
+            }
+
+            .chart-placeholder {
+                height: 200px;
+                margin: 10px auto;
+            }
+
+            .final-cta {
+                margin: 10px;
+                padding: 20px 10px;
+            }
+
+            .cta-button {
+                padding: 12px 24px;
+                margin: 15px;
+            }
+        }
+
+        /* 小屏幕设备 (480px 以下) */
+        @media (max-width: 480px) {
+            .wireframe-note {
+                margin: 5px;
+                font-size: 12px;
+            }
+
+            .logo {
+                font-size: 14px;
+                padding: 5px 10px;
+            }
+
+            .btn-wireframe {
+                padding: 5px 10px;
+                font-size: 12px;
             }
 
             .hero h1 {
-                font-size: 22px;
+                padding: 15px;
+                margin: 15px auto;
+            }
+
+            .hero p {
+                padding: 10px;
+                margin: 15px auto;
+            }
+
+            .preview-card,
+            .feature-box {
+                padding: 15px;
+            }
+
+            .current-intensity {
+                padding: 15px;
+            }
+
+            .feature-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+
+            .section-title {
+                padding: 10px;
+            }
+
+            .final-cta h2 {
+                padding: 15px;
+            }
+        }
+
+        /* 超小屏幕 (320px 以下) */
+        @media (max-width: 320px) {
+            .container {
+                padding: 0 5px;
+            }
+
+            .hero,
+            .section,
+            .chart-preview,
+            .final-cta {
+                margin: 5px;
+            }
+
+            .preview-grid,
+            .features-grid {
+                gap: 10px;
+                padding: 0 5px;
+            }
+        }
+
+        /* 大屏幕优化 (1200px 以上) */
+        @media (min-width: 1200px) {
+            .features-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .preview-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
 </head>
 <body>
-    <div class="wireframe-note">
-        🔧 WIREFRAME - Carbon Smart Homepage Layout Structure
-    </div>
 
-    <!-- Navigation Bar - 修改为更窄的设计 -->
+
+    <!-- Navigation Bar -->
     <nav class="navbar">
-        <a href="/" class="logo" style="text-decoration: none; color: inherit;">⚡ Carbon Smart</a>
-        <div class="nav-buttons">
-            <a href="/login" class="btn-wireframe">Login</a>
-            <a href="/register" class="btn-wireframe btn-primary">Sign Up</a>
+        <div class="container">
+            <a href="/" class="logo">⚡ Carbon Smart</a>
+            <div class="nav-buttons">
+                <a href="/login" class="btn-wireframe">Login</a>
+                <a href="/register" class="btn-wireframe btn-primary">Sign Up</a>
+            </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
     <section class="hero">
-        <h1>Smart Electricity Usage Based on Real-Time Carbon Data</h1>
-        <p>Reduce your carbon footprint by using electricity when it's cleanest. Get personalized recommendations based on UK grid carbon intensity.</p>
-        <a href="/register" class="cta-button btn-wireframe">Get Started - It's Free</a>
+        <div class="container">
+            <h1>Smart Electricity Usage Based on Real-Time Carbon Data</h1>
+            <p>Reduce your carbon footprint by using electricity when it's cleanest. Get personalized recommendations based on UK grid carbon intensity.</p>
+            <a href="/register" class="cta-button btn-wireframe">Get Started - It's Free</a>
+        </div>
     </section>
 
     <!-- Live Preview Section -->
-    <section class="live-preview">
-        <h2 class="section-title">🌍 Live Carbon Intensity Data</h2>
-        <div class="preview-grid">
-            <div class="preview-card">
-                <h3>[Carbon Intensity Icon]</h3>
-                <div class="current-intensity">234 gCO2/kWh</div>
-                <p>Current UK Grid Intensity</p>
-                <span style="background: #28a745; color: white; padding: 5px 10px;">GOOD TIME</span>
-            </div>
-            <div class="preview-card">
-                <h3>[Recommendation Icon]</h3>
-                <div class="recommendation-box">
-                    <strong>💡 Recommendation:</strong><br>
-                    Good time to run your washing machine or dishwasher!
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">🌍 Live Carbon Intensity Data</h2>
+            <div class="preview-grid">
+                <div class="preview-card">
+                    <h3>[Carbon Intensity Icon]</h3>
+                    <div class="current-intensity">234 gCO2/kWh</div>
+                    <p>Current UK Grid Intensity</p>
+                    <span class="status-badge">GOOD TIME</span>
                 </div>
-                <p>Personalized suggestions updated every 30 minutes</p>
+                <div class="preview-card">
+                    <h3>[Recommendation Icon]</h3>
+                    <div class="recommendation-box">
+                        <strong>💡 Recommendation:</strong><br>
+                        Good time to run your washing machine or dishwasher!
+                    </div>
+                    <p>Personalized suggestions updated every 30 minutes</p>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
-    <section class="features">
-        <h2 class="section-title">✨ Key Features</h2>
-        <div class="features-grid">
-            <div class="feature-box">
-                <div class="feature-icon">📊</div>
-                <h3>[Real-Time Data]</h3>
-                <p>Live carbon intensity data from UK National Grid updated every 30 minutes</p>
-            </div>
-            <div class="feature-box">
-                <div class="feature-icon">🎯</div>
-                <h3>[Smart Recommendations]</h3>
-                <p>Get personalized suggestions for optimal electricity usage times</p>
-            </div>
-            <div class="feature-box">
-                <div class="feature-icon">📅</div>
-                <h3>[Task Scheduling]</h3>
-                <p>Plan your appliance usage around the cleanest electricity times</p>
-            </div>
-            <div class="feature-box">
-                <div class="feature-icon">📱</div>
-                <h3>[Responsive Design]</h3>
-                <p>Access your dashboard from desktop, tablet, or mobile device</p>
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">✨ Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-box">
+                    <div class="feature-icon">📊</div>
+                    <h3>[Real-Time Data]</h3>
+                    <p>Live carbon intensity data from UK National Grid updated every 30 minutes</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-icon">🎯</div>
+                    <h3>[Smart Recommendations]</h3>
+                    <p>Get personalized suggestions for optimal electricity usage times</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-icon">📅</div>
+                    <h3>[Task Scheduling]</h3>
+                    <p>Plan your appliance usage around the cleanest electricity times</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-icon">📱</div>
+                    <h3>[Responsive Design]</h3>
+                    <p>Access your dashboard from desktop, tablet, or mobile device</p>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Chart Preview -->
     <section class="chart-preview">
-        <h2 class="section-title">📈 24-Hour Carbon Intensity Forecast</h2>
-        <div class="chart-placeholder">
-            [Chart.js Line Chart Preview]<br>
-            Interactive visualization showing carbon intensity trends and optimal usage windows
+        <div class="container">
+            <h2 class="section-title">📈 24-Hour Carbon Intensity Forecast</h2>
+            <div class="chart-placeholder">
+                [Chart.js Line Chart Preview]<br>
+                Interactive visualization showing carbon intensity trends and optimal usage windows
+            </div>
+            <p style="text-align: center; margin-top: 20px;">
+                <em>Sign up to see detailed 48-hour forecasts and historical data</em>
+            </p>
         </div>
-        <p style="text-align: center; margin-top: 20px;">
-            <em>Sign up to see detailed 48-hour forecasts and historical data</em>
-        </p>
     </section>
 
     <!-- Benefits Section -->
-    <section class="features">
-        <h2 class="section-title">🌱 Why Choose Carbon Smart?</h2>
-        <div class="features-grid">
-            <div class="feature-box">
-                <div class="feature-icon">🌍</div>
-                <h3>[Environmental Impact]</h3>
-                <p>Reduce your carbon footprint by timing electricity usage with renewable energy peaks</p>
-            </div>
-            <div class="feature-box">
-                <div class="feature-icon">💰</div>
-                <h3>[Potential Savings]</h3>
-                <p>Lower carbon usage often correlates with cheaper electricity rates</p>
-            </div>
-            <div class="feature-box">
-                <div class="feature-icon">🎓</div>
-                <h3>[Educational]</h3>
-                <p>Learn about UK energy systems and your role in demand-side response</p>
-            </div>
-            <div class="feature-box">
-                <div class="feature-icon">🔒</div>
-                <h3>[Privacy First]</h3>
-                <p>Your data stays private. We only track your preferences, not your actual usage</p>
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">🌱 Why Choose Carbon Smart?</h2>
+            <div class="features-grid">
+                <div class="feature-box">
+                    <div class="feature-icon">🌍</div>
+                    <h3>[Environmental Impact]</h3>
+                    <p>Reduce your carbon footprint by timing electricity usage with renewable energy peaks</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-icon">💰</div>
+                    <h3>[Potential Savings]</h3>
+                    <p>Lower carbon usage often correlates with cheaper electricity rates</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-icon">🎓</div>
+                    <h3>[Educational]</h3>
+                    <p>Learn about UK energy systems and your role in demand-side response</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-icon">🔒</div>
+                    <h3>[Privacy First]</h3>
+                    <p>Your data stays private. We only track your preferences, not your actual usage</p>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Final Call to Action -->
     <section class="final-cta">
-        <h2 style="border: 1px dashed #28a745; padding: 20px; margin-bottom: 20px;">
-            Ready to Make Your Electricity Usage Smarter?
-        </h2>
-        <p style="font-size: 18px; margin-bottom: 20px;">
-            Join the movement towards cleaner electricity consumption. Start getting personalized recommendations today.
-        </p>
-        <a href="/register" class="cta-button btn-wireframe">Create Your Free Account</a>
-        <p style="margin-top: 15px; font-size: 14px;">
-            <em>No credit card required • Setup takes less than 2 minutes</em>
-        </p>
+        <div class="container">
+            <h2>Ready to Make Your Electricity Usage Smarter?</h2>
+            <p style="font-size: 18px; margin-bottom: 20px;">
+                Join the movement towards cleaner electricity consumption. Start getting personalized recommendations today.
+            </p>
+            <a href="/register" class="cta-button btn-wireframe">Create Your Free Account</a>
+            <p style="margin-top: 15px; font-size: 14px;">
+                <em>No credit card required • Setup takes less than 2 minutes</em>
+            </p>
+        </div>
     </section>
 
     <!-- Footer -->
