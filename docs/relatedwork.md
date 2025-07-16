@@ -14,18 +14,18 @@ How my project differs:
 - Designed for behavior change, not just monitoring.
 
 
-## ElectricityMaps
+## OhmConnect
 
-Website: https://app.electricitymaps.com/
+Website: https://www.ohmconnect.com
 
-What it is: A global real‑time carbon intensity dashboard showing power‑grid CO₂ levels on an interactive map.
+What it is: A U.S. demand‑response platform that rewards residential users for reducing or shifting their electricity use during “Ohm Hours” (periods when the grid is under stress or there’s clean‑energy surplus).
 
-How it works: Streams live data (via WebSockets) from multiple regional APIs. Color‑codes each region by its current carbon intensity. Lets you click a country or state to see a 48‑hour forecast and time‑series chart.
+How it works: Users link their utility meter via an API or smart‑meter integration. OhmConnect sends push/email alerts a few hours before an event. During the event window, users deliberately cut consumption (e.g. delay laundry). Participants earn points and cash rewards for hitting reduction targets.
 
 How my project differs:
-- Personalized Recommendations: Instead of just maps, my app will pinpoint low‑carbon windows for each user’s tasks (e.g. laundry, EV charging).
-- Task Scheduling & Reminders: Users can schedule appliances to run automatically at their chosen low‑carbon time and receive alerts.
-- User Dashboard: Supports login, history tracking, and per‑user carbon‑saving stats.
+- Task Automation vs. Manual Alerts: Rather than just notifying users to “use less,” my app will let them pre‑schedule specific tasks (dishwasher, EV charging) to run automatically in low‑carbon windows.
+- No Incentive Economy Required: My project focus purely on carbon‑aware scheduling, without needing a reward system or utility integration.
+- Open‑Source & Extensible: Anyone can deploy my Python/Flask solution, modify the logic, and connect to any regional carbon API.
 
 ## WattTime
 
