@@ -27,17 +27,16 @@ How my project differs:
 - Task Scheduling & Reminders: Users can schedule appliances to run automatically at their chosen low‑carbon time and receive alerts.
 - User Dashboard: Supports login, history tracking, and per‑user carbon‑saving stats.
 
-## Octopus Energy EV Smart Charging
+## WattTime
 
-Website: https://octopus.energy/ev-charging/
+Website: https://watttime.org/
 
-What it is: Octopus Energy’s customer portal for smart EV charging, combining their Agile tariff (half‑hourly price signals) with carbon forecasts to optimize vehicle charging.
+What it is: A nonprofit platform and API delivering real‑time marginal emissions data for U.S. power grids, aimed at utilities, device makers, and developers.
 
-How it works: Pulls Agile price data + National Grid carbon intensity forecasts. Users set desired charge level and by-when deadline. The system automatically schedules charging to hit targets during the cheapest/cleanest windows.
+How it works: Publishes a REST/SDK interface with second‑by‑second marginal CO₂ emissions per balancing authority. Allows “automated emissions reduction” by letting connected devices shift loads when the grid is cleanest.
 
 How my project differs:
-- Broader Appliance Coverage: My tool isn’t limited to EVs—you’ll let users schedule any appliance or task.
-- Multi‑Task Scheduling: Users can queue multiple tasks (washing, charging, battery backup) with individual preferences.
-- No Vendor Lock‑In: Works for anyone with a browser and account, regardless of energy supplier.
-
+- Consumer‑Friendly UI: My Flask app wraps similar data in an easy web dashboard for everyday users, not just developers.
+- General‑Purpose Tasks: Beyond smart thermostats or industrial loads, your users can schedule any household appliance.
+- Open‑Source Student Project: A simple Python/Flask stack that others can clone, adapt, or extend.
 
