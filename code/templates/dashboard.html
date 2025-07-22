@@ -1,11 +1,118 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Dashboard</title>
+    <meta charset="UTF-8">
+    <title>Dashboard - Carbon Smart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .welcome {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+        .current-info {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        .recommendation {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 6px;
+            color: #856404;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h2>Welcome, {{ username }}!</h2>
-    <p>This is your dashboard.</p>
-    <a href="{{ url_for('logout') }}">Logout</a>
+<div class="container">
+    <div class="welcome">👋 Welcome back, {{ username }}!</div>
+    <div class="current-info">
+        📊 <strong>Current Carbon Intensity:</strong>
+        <span id="intensity">Loading...</span> gCO₂/kWh
+    </div>
+
+    <canvas id="carbonChart" height="100"></canvas>
+
+    <div class="recommendation" id="recommendation">
+        🔍 Smart Recommendation: Fetching...
+    </div>
+
+    <div style="margin-top: 40px;">
+        <a href="/logout">🔒 Logout</a> | <a href="/">🏠 Home</a>
+    </div>
+</div>
+
+<script>
+    fetch('/carbon-data')
+        .then(response => response.json())
+        .then(data => {
+            // 显示当前强度（用 forecast 第一个数据作为当前值）
+            const current = data.values[0];
+            document.getElementById('intensity').innerText = current;
+
+            // 推荐逻辑（英文）
+            let recText = '';
+            if (current < 100) {
+                recText = '🌟 Excellent time to run energy-intensive appliances like washing machines or EV chargers.';
+            } else if (current < 200) {
+                recText = '✅ Carbon intensity is moderate. Suitable for regular usage.';
+            } else {
+                recText = '⚠️ Try to delay electricity use. Carbon intensity is currently high.';
+            }
+            document.getElementById('recommendation').innerText = recText;
+
+            // Chart 绘制
+            const ctx = document.getElementById('carbonChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Carbon Intensity Forecast (gCO₂/kWh)',
+                        data: data.values,
+                        backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                        borderColor: '#28a745',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'gCO₂ per kWh'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(err => {
+            document.getElementById('recommendation').innerText = '❌ Unable to fetch live data.';
+            console.error('Error:', err);
+        });
+</script>
 </body>
 </html>

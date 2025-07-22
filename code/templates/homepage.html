@@ -597,16 +597,17 @@
             <div class="preview-grid">
                 <div class="preview-card">
                     <h3>📊 Carbon Intensity</h3>
-                    <div class="current-intensity">234 gCO2/kWh</div>
+                    <div class="current-intensity" id="live-intensity">Loading...</div>
                     <p>Current UK Grid Intensity</p>
-                    <span class="status-badge">GOOD TIME</span>
+                    <span class="status-badge"id="intensity-status">Checking...</span>
                 </div>
                 <div class="preview-card">
                     <h3>💡 Smart Recommendation</h3>
-                    <div class="recommendation-box">
+                    <div class="recommendation-box" id="recommendation-box">
                         <strong>💡 Recommendation:</strong><br>
-                        Good time to run your washing machine or dishwasher!
+                        <span id="recommendation-text">Loading recommendation...</span>
                     </div>
+
                     <p>Personalized suggestions updated every 30 minutes</p>
                 </div>
             </div>
@@ -647,13 +648,7 @@
         <div class="container">
             <div class="chart-container">
                 <h2 class="section-title">📈 24-Hour Carbon Intensity Forecast</h2>
-                <div class="chart-placeholder">
-                    <div class="chart-placeholder-icon">📊</div>
-                    <div class="chart-placeholder-text">Interactive Chart Preview</div>
-                    <div class="chart-placeholder-subtext">
-                        Visualization showing carbon intensity trends and optimal usage windows
-                    </div>
-                </div>
+                <canvas id="carbonChart" style="max-width: 100%; height: 400px;"></canvas>
                 <p style="text-align: center; margin-top: 20px; font-size: clamp(0.9rem, 2vw, 1rem);">
                     <em>Sign up to see detailed 48-hour forecasts and historical data</em>
                 </p>
@@ -762,5 +757,81 @@
             }
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+fetch('/carbon-data')
+  .then(res => res.json())
+  .then(data => {
+    const ctx = document.getElementById('carbonChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.labels,
+        datasets: [{
+          label: 'Forecasted Carbon Intensity (gCO₂/kWh)',
+          data: data.values,
+          fill: true,
+          tension: 0.3,
+          borderColor: '#28a745',
+          backgroundColor: 'rgba(40,167,69,0.1)',
+          pointRadius: 3
+        }]
+      },
+      options: {
+        scales: {
+          x: { title: { display: true, text: 'Time (UTC)' } },
+          y: { title: { display: true, text: 'gCO₂/kWh' }, beginAtZero: false }
+        },
+        plugins: {
+          tooltip: { callbacks: { label: ctx => ctx.parsed.y + ' gCO₂/kWh' } }
+        }
+      }
+    });
+  })
+  .catch(err => console.error(err));
+</script>
+    <script>
+fetch('/carbon-data')
+    .then(response => response.json())
+    .then(data => {
+        if (data.values && data.values.length > 0) {
+            const intensity = data.values[0];
+            const intensityBox = document.getElementById('live-intensity');
+            const statusBadge = document.getElementById('intensity-status');
+
+            intensityBox.textContent = intensity + ' gCO₂/kWh';
+
+            if (intensity < 100) {
+                statusBadge.textContent = '🌞 GREAT TIME';
+                statusBadge.style.backgroundColor = '#28a745';
+            } else if (intensity < 200) {
+                statusBadge.textContent = 'GOOD TIME';
+                statusBadge.style.backgroundColor = '#ffc107';
+            } else {
+                statusBadge.textContent = '⚠️ HIGH INTENSITY';
+                statusBadge.style.backgroundColor = '#dc3545';
+            }
+        } else {
+            document.getElementById('live-intensity').textContent = 'N/A';
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching live carbon intensity:', error);
+        document.getElementById('live-intensity').textContent = 'Error';
+    });
+</script>
+<script>
+    fetch('/smart-recommendation')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('recommendation-text').innerText = data.recommendation;
+        })
+        .catch(error => {
+            console.error('Error fetching recommendation:', error);
+            document.getElementById('recommendation-text').innerText = "Unable to load recommendation.";
+        });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>
