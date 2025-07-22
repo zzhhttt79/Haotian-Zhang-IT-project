@@ -5,18 +5,13 @@
 Must Have 
 
 1. User Registration & Login
-Implement user authentication using Flask-Login for session management and Flask-WTF for secure form handling.
-Securely hash passwords using bcrypt and store user credentials securely in a SQLite database.
-Offer a “Remember Me” option via persistent sessions handled by Flask-Login, ensuring secure user convenience.
+Users will securely register and log in using credentials managed by Flask-Login and Flask-WTF for form validation and security. Passwords will be hashed and securely stored in an SQLite database using bcrypt. Users will have a "Remember Me" option via persistent sessions. Optionally, OAuth (OpenID Connect) integration may be implemented, allowing users to authenticate securely through trusted third-party services (Google, GitHub) and reducing the need to store passwords locally.
 
 2. Real-Time Carbon Intensity Display
-Use Python Flask backend to fetch live data from the UK Carbon Intensity API at regular intervals (every 30 mins) via RESTful requests (requests library).
-Cache recent API responses briefly using Flask’s caching mechanisms or an in-memory cache to ensure resilience to API downtime.
-Display the real-time carbon intensity clearly on the frontend dashboard using HTML/CSS/JavaScript, styled with Bootstrap for responsiveness.
+Real-time data fetched from the UK Carbon Intensity API by the Python Flask backend will be cached and periodically refreshed every 30 minutes to ensure reliability. The frontend, developed with HTML/CSS, JavaScript, and Bootstrap for responsive design, will dynamically present live carbon intensity data clearly through an intuitive Line Chart powered by Chart.js, allowing users to instantly understand the current carbon intensity levels and trends.
 
 3. Optimal Electricity Usage Recommendations
-Develop a backend algorithm in Python (Flask) to analyze real-time carbon intensity data, identifying low-carbon time slots.
-Clearly present recommendations on the frontend dashboard using color-coded indicators built with HTML/CSS, enhanced by JavaScript interactivity.
+Recommendations for optimal electricity usage will be derived from the Flask backend’s analysis of live carbon intensity data. Recommended low-carbon periods will be clearly presented on the dashboard using intuitive, color-coded visuals, such as a Heatmap or Bar Chart implemented via Chart.js. Users can quickly identify the most environmentally friendly times for using electricity.
 
 Should Have
 
@@ -61,4 +56,6 @@ Deploy the Flask application efficiently and securely using platform-as-a-servic
 Leverage Bootstrap to ensure responsive, intuitive UI designs that are user-friendly, even for non-technical audiences.
 Provide clear documentation and helpful guidance within the interface to ensure smooth user adoption.
 
+5. Deployment:
+Application deployment on a managed hosting platform (Render or Railway), simplifying continuous integration, deployment, and scalability.
 
