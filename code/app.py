@@ -109,7 +109,6 @@ def smart_recommendation():
         data = response.json()['data'][0]
         intensity = data['intensity']['actual']
 
-        # 简单的推荐逻辑（你可以根据实际情况扩展）
         if intensity < 100:
             recommendation = "Great time to use high-energy devices like EV charger or dryer."
         elif intensity < 150:

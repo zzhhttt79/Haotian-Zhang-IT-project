@@ -58,11 +58,10 @@
     fetch('/carbon-data')
         .then(response => response.json())
         .then(data => {
-            // 显示当前强度（用 forecast 第一个数据作为当前值）
+
             const current = data.values[0];
             document.getElementById('intensity').innerText = current;
 
-            // 推荐逻辑（英文）
             let recText = '';
             if (current < 100) {
                 recText = '🌟 Excellent time to run energy-intensive appliances like washing machines or EV chargers.';
