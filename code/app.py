@@ -1,19 +1,19 @@
-from flask import Flask, render_template, redirect, url_for, flash, request
+from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+import os
+import requests
+from datetime import datetime, timedelta
 
 from models import db, User
 from forms import RegisterForm, LoginForm
-import os
+from config import Config
 
-import requests
-from flask import jsonify
-from datetime import datetime, timedelta
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'instance', 'database.db')
+app.config.from_object(Config)
 
 db.init_app(app)
 
