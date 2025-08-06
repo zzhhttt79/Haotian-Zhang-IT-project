@@ -444,30 +444,35 @@
         </div>
 
         <!-- Stats Overview -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <span class="stat-icon">📱</span>
-                <span class="stat-number" id="totalAppliances">
-                <span class="stat-label">Total Appliances
-                {{ total_appliances }}
-                </span>
-                <span class="stat-label">Total Appliances</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-icon">⚡</span>
-                <span class="stat-number" id="totalWattage">
-                    {{ total_wattage }}
-                </span>
-                <span class="stat-label">Total Watts</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-icon">📊</span>
-                <span class="stat-number" id="categories">
-                    {{ categories }}
-                </span>
-                <span class="stat-label">Categories</span>
-            </div>
-        </div>
+    <div class="stats-grid">
+  <!-- 总设备数 -->
+  <div class="stat-card">
+    <span class="stat-icon">📱</span>
+    <span class="stat-number" id="totalAppliances">
+      {{ total_appliances }}
+    </span>
+    <span class="stat-label">Total Appliances</span>
+  </div>
+
+  <!-- 总功率 -->
+  <div class="stat-card">
+    <span class="stat-icon">⚡</span>
+    <span class="stat-number" id="totalWattage">
+      {{ total_wattage }}
+    </span>
+    <span class="stat-label">Total Watts</span>
+  </div>
+
+  <!-- 分类数 -->
+  <div class="stat-card">
+    <span class="stat-icon">📊</span>
+    <span class="stat-number" id="categories">
+      {{ categories }}
+    </span>
+    <span class="stat-label">Categories</span>
+  </div>
+</div>
+
 
         <!-- Add Appliance Form -->
 <div class="section-card">

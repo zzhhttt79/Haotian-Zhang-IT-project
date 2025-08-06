@@ -779,9 +779,7 @@ fetch('/carbon-data')
         }]
       },
       options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          scales: {
+        scales: {
           x: { title: { display: true, text: 'Time (UTC)' } },
           y: { title: { display: true, text: 'gCO₂/kWh' }, beginAtZero: false }
         },
@@ -852,15 +850,33 @@ fetch('/carbon-data')
 
   // —— 3. 智能推荐 ——
   fetch('/smart-recommendation')
-    .then(r => r.json())
+    .then(res => res.json())
     .then(data => {
-      document.getElementById('recommendation-text').textContent = data.recommendation;
+      const list = document.getElementById('recommendationList');
+      list.innerHTML = ''; // 先清空旧内容
+      data.recommendations.forEach(rec => {
+        // 为每个 appliance 创建一个卡片
+        const card = document.createElement('div');
+        card.className = 'recommendation-card';
+        let html = `<h4>${rec.name}</h4><ul>`;
+        // 遍历 Top-3 时段
+        rec.windows.forEach(w => {
+          html += `<li>
+            <strong>${w.time}</strong> — 平均 <strong>${w.avg_ci} gCO₂/kWh</strong>
+          </li>`;
+        });
+        html += `</ul><p class="note">${rec.note}</p>`;
+        card.innerHTML = html;
+        list.appendChild(card);
+      });
     })
     .catch(err => {
       console.error('Error loading recommendation:', err);
-      document.getElementById('recommendation-text').textContent = 'Unable to load recommendation.';
+      document.getElementById('recommendationList').innerHTML =
+        '<p>Unable to load recommendation.</p>';
     });
 </script>
+
 
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

@@ -2,9 +2,10 @@ from flask import Flask, render_template, redirect, url_for, flash, request, jso
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import os
+
 import requests
 from datetime import datetime, timedelta
-
+from statistics import mean
 from models import db, User, Appliance
 from forms import RegisterForm, LoginForm, ApplianceForm
 from config import Config
@@ -34,7 +35,7 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         if User.query.filter_by(username=form.username.data).first():
-            flash('Username already exists')
+            flash('Username already exists', 'error')
         else:
             user = User(username=form.username.data)
             user.set_password(form.password.data)
@@ -138,27 +139,53 @@ def current_intensity():
         return jsonify({'intensity': None, 'datetime': None}), 500
 
 @app.route('/smart-recommendation')
+@login_required
 def smart_recommendation():
-    url = 'https://api.carbonintensity.org.uk/intensity'
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()['data'][0]
-        intensity = data['intensity']['actual']
+    # 1. 读取当前用户所有电器
+    appliances = Appliance.query.filter_by(user_id=current_user.id).all()
+    if not appliances:
+        return jsonify(recommendations=[])
 
-        if intensity < 100:
-            recommendation = "Great time to use high-energy devices like EV charger or dryer."
-        elif intensity < 150:
-            recommendation = "Good time to run your washing machine or dishwasher."
-        elif intensity < 200:
-            recommendation = "Fair time to use small electronics or do light chores."
-        else:
-            recommendation = "Try to delay high energy tasks until carbon intensity drops."
+    # 2. 拉取未来 24h 碳强度预测
+    now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    to  = now + timedelta(hours=24)
+    ci_url = f'https://api.carbonintensity.org.uk/intensity/{now.isoformat()}/{to.isoformat()}'
+    resp = requests.get(ci_url)
+    resp.raise_for_status()
+    entries = resp.json()['data']
 
-        return jsonify({'recommendation': recommendation})
-    except Exception as e:
-        print('Error fetching recommendation:', e)
-        return jsonify({'recommendation': "Unable to fetch recommendation."}), 500
+    # 3. 构建 (timestamp, forecast) 列表
+    ci_series = [(datetime.fromisoformat(e['from']), e['intensity']['forecast'])
+                 for e in entries]
+
+    # 4. 查找每台设备的 Top-3 最低平均碳强度时段
+    recommendations = []
+    window_size = 2  # 两个 30 分钟段 = 1 小时
+
+    for app in appliances:
+        windows = []
+        for i in range(len(ci_series) - window_size + 1):
+            slice_ = ci_series[i:i+window_size]
+            avg_ci = mean(v for _, v in slice_)
+            start = slice_[0][0]
+            end   = start + timedelta(minutes=30 * window_size)
+            windows.append({
+                'time': f"{start.strftime('%H:%M')}–{end.strftime('%H:%M')}",
+                'avg_ci': round(avg_ci, 1)
+            })
+
+        # 按 avg_ci 排序，取前 3
+        best3 = sorted(windows, key=lambda w: w['avg_ci'])[:3]
+        note  = (f"推荐时段：{best3[0]['time']}，"
+                 f"平均碳强度 {best3[0]['avg_ci']} gCO₂/kWh。")
+
+        recommendations.append({
+            'name': app.name,
+            'windows': best3,
+            'note': note
+        })
+
+    return jsonify(recommendations=recommendations)
 
 
 @app.route('/appliances', methods=['GET', 'POST'])
@@ -203,7 +230,22 @@ def delete_appliance(appliance_id):
     flash("Appliance deleted.")
     return redirect(url_for('appliances'))
 
+@app.route('/preferences', methods=['GET','POST'])
+@login_required
+def preferences():
+    if request.method == 'POST':
+        wci = float(request.form['weight_ci'])
+        wp  = float(request.form['weight_price'])
+        wu  = float(request.form['weight_flex'])
+        s   = wci + wp + wu or 1
+        current_user.weight_ci    = wci/s
+        current_user.weight_price = wp/s
+        current_user.weight_flex  = wu/s
+        db.session.commit()
+        flash('设置已保存', 'success')
+    return render_template('preferences.html')
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
