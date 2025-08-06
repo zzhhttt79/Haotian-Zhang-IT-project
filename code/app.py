@@ -5,8 +5,8 @@ import os
 import requests
 from datetime import datetime, timedelta
 
-from models import db, User
-from forms import RegisterForm, LoginForm
+from models import db, User, Appliance
+from forms import RegisterForm, LoginForm, ApplianceForm
 from config import Config
 
 from dotenv import load_dotenv
@@ -41,8 +41,12 @@ def register():
             db.session.add(user)
             db.session.commit()
             flash('Registered successfully!')
-            return redirect(url_for('login'))
+            return redirect(url_for('register_success'))
     return render_template('register.html', form=form)
+
+@app.route('/register_success')
+def register_success():
+    return render_template('register_success.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -60,6 +64,39 @@ def login():
 @login_required
 def dashboard():
     return render_template('dashboard.html', username=current_user.username)
+
+@app.route('/api/dashboard-data')
+@login_required
+def dashboard_data():
+    # 1) 当前强度
+    try:
+        resp1 = requests.get('https://api.carbonintensity.org.uk/intensity')
+        ci = resp1.json()['data'][0]['intensity']['actual']
+    except:
+        ci = None
+
+    # 2) 24h 预测
+    now = datetime.utcnow()
+    ft = now.strftime('%Y-%m-%dT%H:00Z')
+    tt = (now + timedelta(hours=24)).strftime('%Y-%m-%dT%H:00Z')
+    try:
+        resp2 = requests.get(f'https://api.carbonintensity.org.uk/intensity/{ft}/{tt}')
+        forecast = resp2.json()['data']
+        labels = [e['from'][11:16] for e in forecast]
+        values = [e['intensity']['forecast'] for e in forecast]
+    except:
+        labels, values = [], []
+
+    # 3) 用户电器
+    apps = Appliance.query.filter_by(user_id=current_user.id).all()
+    appliances = [{'name': a.name, 'wattage': a.wattage} for a in apps]
+
+    return jsonify({
+        'intensity': ci,
+        'labels': labels,
+        'values': values,
+        'appliances': appliances
+    })
 
 @app.route('/logout')
 @login_required
@@ -122,6 +159,49 @@ def smart_recommendation():
     except Exception as e:
         print('Error fetching recommendation:', e)
         return jsonify({'recommendation': "Unable to fetch recommendation."}), 500
+
+
+@app.route('/appliances', methods=['GET', 'POST'])
+@login_required
+def appliances():
+    form = ApplianceForm()
+    if form.validate_on_submit():
+        appliance = Appliance(
+            name=form.name.data,
+            category=form.category.data,
+            wattage=form.wattage.data,
+            user_id=current_user.id
+        )
+        db.session.add(appliance)
+        db.session.commit()
+        flash('Appliance added successfully!')
+        return redirect(url_for('appliances'))
+
+    user_appliances = Appliance.query.filter_by(user_id=current_user.id).all()
+    total_appliances = len(user_appliances)
+    total_wattage = sum(a.wattage for a in user_appliances)
+    categories = len({a.category for a in user_appliances})
+    return render_template(
+        'appliances.html',
+        form=form,
+        appliances=user_appliances,
+        total_appliances=total_appliances,
+        total_wattage=total_wattage,
+        categories=categories
+    )
+
+@app.route('/delete-appliance/<int:appliance_id>', methods=['POST'])
+@login_required
+def delete_appliance(appliance_id):
+    appliance = Appliance.query.get_or_404(appliance_id)
+    if appliance.user_id != current_user.id:
+        flash("Unauthorized access.")
+        return redirect(url_for('appliances'))
+
+    db.session.delete(appliance)
+    db.session.commit()
+    flash("Appliance deleted.")
+    return redirect(url_for('appliances'))
 
 if __name__ == '__main__':
     with app.app_context():
