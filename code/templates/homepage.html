@@ -603,14 +603,16 @@
                     <span class="status-badge"id="intensity-status">Checking...</span>
                 </div>
                 <div class="preview-card">
-                    <h3>💡 Smart Recommendation</h3>
-                    <div class="recommendation-box" id="recommendation-box">
-                        <strong>💡 Recommendation:</strong><br>
-                        <span id="recommendation-text">Loading recommendation...</span>
-                    </div>
+  <h3>💡 Smart Recommendation</h3>
+  <div class="recommendation-box">
+    <!-- 这里专门留空，JS 会往里插入推荐卡片 -->
+    <div id="recommendationList">
+      Loading recommendation...
+    </div>
+  </div>
 
-                    <p>Personalized suggestions updated every 30 minutes</p>
-                </div>
+  <p>Personalized suggestions updated every 30 minutes</p>
+</div>
             </div>
         </div>
     </section>
@@ -853,17 +855,17 @@ fetch('/carbon-data')
     .then(res => res.json())
     .then(data => {
       const list = document.getElementById('recommendationList');
-      list.innerHTML = ''; // 先清空旧内容
+      list.innerHTML = '';
+      if (data.recommendations.length === 0) {
+        list.innerHTML = '<p>No recommendations available.</p>';
+        return;
+      }
       data.recommendations.forEach(rec => {
-        // 为每个 appliance 创建一个卡片
         const card = document.createElement('div');
         card.className = 'recommendation-card';
         let html = `<h4>${rec.name}</h4><ul>`;
-        // 遍历 Top-3 时段
         rec.windows.forEach(w => {
-          html += `<li>
-            <strong>${w.time}</strong> — 平均 <strong>${w.avg_ci} gCO₂/kWh</strong>
-          </li>`;
+          html += `<li><strong>${w.time}</strong> — Avg <strong>${w.avg_ci} gCO₂/kWh</strong></li>`;
         });
         html += `</ul><p class="note">${rec.note}</p>`;
         card.innerHTML = html;

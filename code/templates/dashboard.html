@@ -1,180 +1,653 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Carbon Smart Dashboard</title>
+  <title>Carbon Smart • Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-           background:#f5f7fa; color:#2d3748; line-height:1.6; }
-    .container { max-width:900px; margin:0 auto; padding:20px; }
-    .header { text-align:center; margin-bottom:30px; }
-    .header h1 { font-size:2rem; color:#2b6cb0; margin-bottom:8px; }
-    .header p { color:#718096; font-size:1rem; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-             gap:20px; margin-bottom:30px; }
-    .card { background:white; border-radius:12px; padding:24px;
-            box-shadow:0 2px 8px rgba(0,0,0,0.08); border:1px solid #e2e8f0; }
-    .card-title { font-size:1.1rem; font-weight:600; color:#2d3748;
-                  margin-bottom:16px; display:flex; align-items:center; gap:8px; }
-    .intensity-display { text-align:center; margin-bottom:20px; }
-    .intensity-value { font-size:3rem; font-weight:bold; color:#38a169;
-                        display:block; margin:8px 0; }
-    .status-badge { display:inline-block; padding:6px 12px; border-radius:20px;
-                     font-size:0.85rem; font-weight:600; background:#38a169; color:white; }
-    .metrics { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px; }
-    .metric { text-align:center; padding:12px; background:#f7fafc; border-radius:8px; }
-    .metric-label { font-size:0.8rem; color:#718096; margin-bottom:4px; }
-    .metric-value { font-size:1.1rem; font-weight:600; color:#2d3748; }
-    .appliance { display:flex; justify-content:space-between; align-items:center;
-                 padding:12px 0; border-bottom:1px solid #e2e8f0; }
-    .appliance:last-child { border-bottom:none; }
-    .appliance-info h4 { font-size:0.95rem; margin-bottom:2px; }
-    .appliance-info p { font-size:0.8rem; color:#718096; }
-    .appliance-status { padding:4px 10px; border-radius:12px; font-size:0.75rem;
-                        font-weight:600; }
-    .status-good { background:#c6f6d5; color:#22543d; }
-    .status-wait { background:#fefcbf; color:#744210; }
-    .status-avoid { background:#fed7d7; color:#742a2a; }
-    .chart-container { height:200px; margin:16px 0; }
-    .summary { background:#edf2f7; padding:12px; border-radius:8px;
-               font-size:0.9rem; color:#4a5568; }
-    .nav { text-align:center; margin-top:30px; }
-    .nav a { display:inline-block; margin:0 8px; padding:8px 16px;
-             background:#2b6cb0; color:white; text-decoration:none; border-radius:6px;
-             font-size:0.9rem; transition:background 0.2s; }
-    .nav a:hover { background:#2c5282; }
-    .loading { display:inline-block; width:16px; height:16px;
-               border:2px solid #e2e8f0; border-top:2px solid #38a169;
-               border-radius:50%; animation:spin 1s linear infinite; }
-    @keyframes spin { 0%{transform:rotate(0deg);}100%{transform:rotate(360deg);} }
-    @media (max-width:768px) {
-      .container{padding:16px;}
-      .grid{grid-template-columns:1fr;}
-      .metrics{grid-template-columns:1fr;}
-      .nav a{display:block; margin:4px 0;}
+    :root{
+      /* Brand Colors */
+      --brand: #16a34a;
+      --brand-2: #22c55e;
+      --brand-3: #059669;
+      --ink-900:#1f2937;
+      --ink-700:#374151;
+      --ink-500:#6b7280;
+      --ink-300:#cbd5e1;
+      --bg:#f6f8fb;
+
+      /* Card Styling */
+      --card-bg:#ffffff;
+      --card-br:#e5e7eb;
+      --card-shadow:0 4px 20px rgba(2,6,23,.08);
+
+      /* Status Colors */
+      --ok-bg:#dcfce7;    --ok-text:#166534;   --ok-br:#86efac;
+      --warn-bg:#fef3c7;  --warn-text:#92400e; --warn-br:#fcd34d;
+      --bad-bg:#fee2e2;   --bad-text:#7f1d1d;  --bad-br:#fca5a5;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background:var(--bg);
+      color:var(--ink-900);
+      line-height:1.6;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
+    }
+
+    /* Updated Navigation - Matching Homepage Style */
+    .navbar {
+      background: white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 15px 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .navbar .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .logo {
+      font-size: clamp(1.2rem, 3vw, 1.5rem);
+      font-weight: bold;
+      color: #28a745;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-right: 0;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: clamp(15px, 3vw, 25px);
+      align-items: center;
+      margin-left: auto;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: #666;
+      font-weight: 500;
+      transition: color 0.3s ease;
+      position: relative;
+      font-size: clamp(0.9rem, 2vw, 1rem);
+    }
+
+    .nav-links a:hover {
+      color: #28a745;
+    }
+
+    .nav-links a.active {
+      color: #28a745;
+      font-weight: 600;
+    }
+
+    .nav-links a.active::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #28a745;
+    }
+
+    .btn-outline {
+      padding: clamp(6px, 1.5vw, 8px) clamp(15px, 3vw, 20px);
+      border: 2px solid #28a745;
+      border-radius: 6px;
+      color: #28a745;
+      background: transparent;
+      transition: all 0.3s ease;
+      font-size: clamp(0.85rem, 2vw, 0.95rem);
+      white-space: nowrap;
+    }
+
+    .btn-outline:hover {
+      background: #28a745;
+      color: white;
+    }
+
+    /* Mobile Navigation Toggle */
+    .nav-toggle {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    .nav-toggle span {
+      width: 25px;
+      height: 3px;
+      background: #333;
+      margin: 3px 0;
+      transition: 0.3s;
+      border-radius: 3px;
+    }
+
+    .nav-toggle.active span:nth-child(1) {
+      transform: rotate(-45deg) translate(-5px, 6px);
+    }
+
+    .nav-toggle.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .nav-toggle.active span:nth-child(3) {
+      transform: rotate(45deg) translate(-5px, -6px);
+    }
+
+    .wrap{max-width:1200px;margin:0 auto;padding:0 20px}
+
+    /* Page Header */
+    .pagehead{
+      background:linear-gradient(180deg, rgba(34,197,94,.08), transparent 70%);
+      padding:32px 0 16px;
+    }
+    .pagehead h1{
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight:800; letter-spacing:.2px;
+      color:#0f172a; text-align:center;
+      margin-bottom:8px;
+    }
+    .pagehead p{
+      color:var(--ink-500); text-align:center;
+      font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+    }
+
+    /* Grid Layout */
+    .grid{
+      max-width:1200px; margin:25px auto; padding:0 20px;
+      display:grid; grid-template-columns:repeat(12,1fr); gap:24px;
+    }
+    .card{
+      grid-column:span 12;
+      background:var(--card-bg);
+      border:1px solid var(--card-br);
+      border-radius:16px;
+      box-shadow:var(--card-shadow);
+      padding:24px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover{
+      transform:translateY(-2px);
+      box-shadow:0 8px 30px rgba(2,6,23,.12);
+    }
+    @media (min-width:860px){
+      .card.span-6{grid-column:span 6}
+    }
+    .card-head{
+      display:flex; align-items:center; gap:12px; margin-bottom:18px;
+      color:var(--ink-700); font-weight:700;
+      font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+      letter-spacing:.2px;
+    }
+    .card-head .emoji{font-size: clamp(1.3rem, 3vw, 1.5rem);}
+
+    /* Enhanced Intensity Panel */
+    .intensity{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:20px 20px; border:2px solid var(--ok-br);
+      border-radius:16px; background:linear-gradient(135deg, #f0fdf4, #dcfce7);
+      transition: all 0.3s ease;
+    }
+    .intensity.warn{
+      border-color:var(--warn-br);
+      background:linear-gradient(135deg, #fffbeb, #fef3c7);
+    }
+    .intensity.bad{
+      border-color:var(--bad-br);
+      background:linear-gradient(135deg, #fef2f2, #fee2e2);
+    }
+    .intensity .value{
+      font-size: clamp(1.5rem, 5vw, 1.5rem);
+      font-weight:900; color:var(--brand-3);
+      line-height:1;
+    }
+    .intensity.warn .value{color:var(--warn-text);}
+    .intensity.bad .value{color:var(--bad-text);}
+
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 16px; border-radius:25px; font-weight:700;
+      font-size: clamp(0.8rem, 2vw, 0.9rem);
+      letter-spacing:.3px; text-transform:uppercase;
+      border:2px solid; transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .chip.ok   { background:var(--ok-bg);   color:var(--ok-text);   border-color:var(--ok-br); }
+    .chip.warn { background:var(--warn-bg); color:var(--warn-text); border-color:var(--warn-br); }
+    .chip.bad  { background:var(--bad-bg);  color:var(--bad-text);  border-color:var(--bad-br); }
+
+    .metrics{
+      margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:16px;
+    }
+    .metric{
+      background:#fafafa; border:1px solid var(--card-br); border-radius:12px;
+      padding:16px; text-align:center; transition: background 0.3s ease;
+    }
+    .metric:hover{background:#f0f0f0;}
+    .metric .label{
+      color:var(--ink-500); font-size: clamp(0.8rem, 2vw, 0.9rem);
+      font-weight:500; margin-bottom:4px;
+    }
+    .metric .num{
+      font-weight:800; font-size: clamp(1rem, 2.5vw, 1.2rem);
+      color:var(--ink-900);
+    }
+
+    /* Enhanced Recommendations */
+    #recommendationList .row{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 0; border-bottom:1px solid #f0f0f0;
+      transition: all 0.3s ease;
+    }
+    #recommendationList .row:last-child{border-bottom:0}
+    #recommendationList .row:hover{
+      background:rgba(22,163,74,.03);
+      margin:0 -20px; padding-left:20px; padding-right:20px;
+      border-radius:12px;
+    }
+
+    .appl{
+      display:flex; flex-direction:column;
+    }
+    .appl h4{
+      font-size: clamp(0.95rem, 2vw, 1.1rem);
+      font-weight:700; color:var(--ink-900);
+      margin-bottom:2px;
+    }
+    .appl p{
+      font-size: clamp(0.8rem, 1.8vw, 0.9rem);
+      color:var(--ink-500); font-weight:500;
+    }
+
+    .tag{
+      font-size: clamp(0.75rem, 1.8vw, 0.85rem);
+      font-weight:700; border-radius:20px;
+      padding:6px 14px; border:2px solid;
+      text-transform:uppercase; letter-spacing:.2px;
+      transition: all 0.3s ease;
+    }
+    .tag.good{ background:var(--ok-bg);   color:var(--ok-text);   border-color:var(--ok-br);}
+    .tag.wait{ background:var(--warn-bg); color:var(--warn-text); border-color:var(--warn-br);}
+    .tag.avoid{background:var(--bad-bg);  color:var(--bad-text);  border-color:var(--bad-br);}
+
+    /* Enhanced Chart */
+    .chart-box{
+      height: clamp(260px, 50vw, 320px);
+      margin-bottom:18px;
+    }
+    .summary{
+      background:linear-gradient(135deg, #f8fafc, #e2e8f0);
+      border:1px solid var(--card-br);
+      padding:16px; border-radius:12px; color:var(--ink-700);
+      font-size: clamp(0.9rem, 2vw, 1rem);
+      line-height:1.5;
+    }
+    .summary strong{color:var(--ink-900);}
+
+    /* Loading Animation */
+    .loading{
+      display:inline-block; width:18px; height:18px;
+      border:2px solid #e5e7eb; border-top-color:var(--brand-3); border-radius:50%;
+      animation:spin 1s linear infinite; vertical-align:-3px;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Error State */
+    .error-state{
+      background:var(--bad-bg); border:1px solid var(--bad-br);
+      color:var(--bad-text); padding:16px; border-radius:12px;
+      text-align:center; font-weight:600;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+      .nav-toggle {
+        display: flex;
+      }
+
+      .nav-links {
+        position: fixed;
+        top: 70px;
+        right: -100%;
+        width: 100%;
+        height: calc(100vh - 70px);
+        background: white;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        padding-top: 50px;
+        transition: right 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .nav-links.active {
+        right: 0;
+      }
+
+      .nav-links a {
+        padding: 15px 0;
+        font-size: 1.1rem;
+        border-bottom: 1px solid #f0f0f0;
+        width: 80%;
+        text-align: center;
+      }
+
+      .btn-outline {
+        margin-top: 20px;
+        padding: 12px 30px;
+      }
+
+      .navbar .container {
+        padding: 0 15px;
+      }
+
+      .grid{gap:20px; padding:0 16px;}
+      .card{padding:20px;}
+      .intensity{
+        flex-direction:column; gap:16px; text-align:center;
+        padding:20px 16px;
+      }
+      .metrics{grid-template-columns:1fr; gap:12px;}
+      .pagehead{padding:24px 0 12px;}
+      #recommendationList .row{
+        flex-direction:column; gap:12px; align-items:flex-start;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .wrap{padding:0 16px;}
+      .card{padding:16px;}
+      .navbar .container {
+        padding: 0 16px;
+      }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      :root{
+        --bg:#0f172a;
+        --card-bg:#1e293b;
+        --card-br:#334155;
+        --ink-900:#f1f5f9;
+        --ink-700:#cbd5e1;
+        --ink-500:#94a3b8;
+      }
+    }
+
+    /* Accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
     }
   </style>
 </head>
+
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🌱 Carbon Smart</h1>
-      <p>Optimize your energy usage for a cleaner future</p>
-    </div>
-
-    <div class="grid">
-      <!-- Carbon Intensity -->
-      <div class="card">
-        <div class="card-title">📊 Current Grid Intensity</div>
-        <div class="intensity-display">
-          <span class="intensity-value" id="intensity">
-            <span class="loading"></span>
-          </span>
-          <span class="status-badge" id="status">Checking...</span>
-        </div>
-        <div class="metrics">
-          <div class="metric">
-            <div class="metric-label">Today's Avg</div>
-            <div class="metric-value" id="avg">--</div>
-          </div>
-          <div class="metric">
-            <div class="metric-label">Best Time</div>
-            <div class="metric-value">2:30 PM</div>
-          </div>
-        </div>
+  <!-- Updated Navigation - Matching Homepage Style -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="/" class="logo">⚡ Carbon Smart</a>
+      <div class="nav-toggle" onclick="toggleNav()">
+        <span></span>
+        <span></span>
+        <span></span>
       </div>
-
-      <!-- Appliance Recommendations -->
-      <div class="card">
-        <div class="card-title">💡 Smart Recommendations</div>
-        <div id="recommendationList">
-          <p>Loading your appliances...</p>
-        </div>
-      </div>
-
-      <!-- Forecast Chart -->
-      <div class="card">
-        <div class="card-title">📈 24-Hour Forecast</div>
-        <div class="chart-container">
-          <canvas id="chart"></canvas>
-        </div>
-        <div class="summary">
-          <strong>Today's Summary:</strong>
-          Best window for high-energy tasks is 2PM-4PM.
-          Avoid evening peak hours (6PM-8PM).
-        </div>
+      <div class="nav-links" id="navLinks">
+        <a href="/">Home</a>
+        <a href="/appliances">My Appliances</a>
+        <a href="/login" class="btn-outline">Login</a>
       </div>
     </div>
+  </nav>
 
-    <!-- Navigation -->
-    <div class="nav">
-      <a href="/">🏠 Home</a>
-      <a href="/appliances">⚙️ Appliances</a>
-      <a href="/settings">🔧 Settings</a>
+  <!-- Page Header -->
+  <div class="pagehead">
+    <div class="wrap">
+      <h1>Live Carbon Intensity Data</h1>
+      <p>Personalized suggestions updated every 30 minutes</p>
     </div>
   </div>
 
+  <!-- Main Content -->
+  <section class="grid">
+    <!-- Current Intensity Card -->
+    <div class="card span-6">
+      <div class="card-head"><span class="emoji">📊</span> Current Grid Intensity</div>
+
+      <div class="intensity" id="intensityPanel">
+        <div class="value" id="intensity"><span class="loading"></span></div>
+        <div id="status" class="chip warn">Checking…</div>
+      </div>
+
+      <div class="metrics">
+        <div class="metric">
+          <div class="label">Today's Average</div>
+          <div class="num" id="avg">--</div>
+        </div>
+        <div class="metric">
+          <div class="label">Best Time Today</div>
+          <div class="num" id="bestWindow">2:30 PM</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Smart Recommendations Card -->
+    <div class="card span-6">
+      <div class="card-head"><span class="emoji">💡</span> Smart Recommendations</div>
+      <div id="recommendationList">
+        <p style="color:var(--ink-500); text-align:center; padding:20px;">Loading your appliances…</p>
+      </div>
+    </div>
+
+    <!-- 24-Hour Forecast Card -->
+    <div class="card">
+      <div class="card-head"><span class="emoji">📈</span> 24‑Hour Forecast</div>
+      <div class="chart-box"><canvas id="chart"></canvas></div>
+      <div class="summary">
+        <strong>Today's Summary:</strong> Best window for high‑energy tasks is 2PM–4PM. Avoid evening peak hours (6PM–8PM).
+      </div>
+    </div>
+  </section>
+
   <script>
-    // 主渲染函数：统一更新数值、徽章、图表和电器列表
-    function updateDashboard(data) {
+    // Navigation toggle function
+    function toggleNav() {
+      const navLinks = document.getElementById('navLinks');
+      const navToggle = document.querySelector('.nav-toggle');
+
+      navLinks.classList.toggle('active');
+      navToggle.classList.toggle('active');
+    }
+
+    // Close mobile menu when clicking on a link
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        const navLinks = document.getElementById('navLinks');
+        const navToggle = document.querySelector('.nav-toggle');
+
+        navLinks.classList.remove('active');
+        navToggle.classList.remove('active');
+      });
+    });
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+      const navLinks = document.getElementById('navLinks');
+      const navToggle = document.querySelector('.nav-toggle');
+      const navbar = document.querySelector('.navbar');
+
+      if (!navbar.contains(e.target)) {
+        navLinks.classList.remove('active');
+        navToggle.classList.remove('active');
+      }
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      const navLinks = document.getElementById('navLinks');
+      const navToggle = document.querySelector('.nav-toggle');
+
+      if (window.innerWidth > 768) {
+        navLinks.classList.remove('active');
+        navToggle.classList.remove('active');
+      }
+    });
+
+    // Determine status based on intensity
+    function statusClass(intensity){
+      if (intensity < 100) return 'ok';
+      if (intensity < 150) return 'warn';
+      return 'bad';
+    }
+
+    function statusText(intensity){
+      if (intensity < 100) return 'Excellent';
+      if (intensity < 150) return 'Good';
+      return 'High';
+    }
+
+    // Update dashboard with data
+    function updateDashboard(data){
       const current = data.intensity;
-      // 更新强度值和徽章
-      document.getElementById('intensity').textContent = current ?? '–';
+
+      // Update intensity display
+      const intensityEl = document.getElementById('intensity');
+      intensityEl.textContent = (current ?? '–') + (current ? ' gCO₂/kWh' : '');
+
+      // Update status and panel styling
       const statusEl = document.getElementById('status');
-      statusEl.className = 'status-badge';
-      if (current < 100) {
-        statusEl.textContent = '🌞 Excellent'; statusEl.style.background = '#38a169';
-      } else if (current < 150) {
-        statusEl.textContent = '✅ Good';      statusEl.style.background = '#d69e2e';
-      } else {
-        statusEl.textContent = '⚠️ High';     statusEl.style.background = '#e53e3e';
+      const panelEl = document.getElementById('intensityPanel');
+      const status = statusClass(current || 999);
+
+      statusEl.className = 'chip ' + status;
+      statusEl.textContent = statusText(current || 999);
+      panelEl.className = 'intensity ' + status;
+
+      // Update metrics
+      if (typeof data.avg !== 'undefined') {
+        document.getElementById('avg').textContent = data.avg + ' gCO₂/kWh';
       }
 
-      // 绘制预测曲线
+      // Create enhanced chart
       const ctx = document.getElementById('chart').getContext('2d');
       new Chart(ctx, {
         type: 'line',
-        data: { labels: data.labels, datasets: [{ label: 'Forecast', data: data.values }] },
-        options: { maintainAspectRatio: false }
+        data: {
+          labels: data.labels,
+          datasets: [{
+            label: 'Carbon Intensity (gCO₂/kWh)',
+            data: data.values,
+            fill: true,
+            backgroundColor: 'rgba(22,163,74,0.1)',
+            borderColor: '#16a34a',
+            borderWidth: 3,
+            tension: 0.4,
+            pointRadius: 0,
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor: '#16a34a',
+            pointHoverBorderColor: '#fff',
+            pointHoverBorderWidth: 2
+          }]
+        },
+        options: {
+          maintainAspectRatio: false,
+          responsive: true,
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#6b7280' }
+            },
+            y: {
+              grid: { color: '#e5e7eb' },
+              ticks: { color: '#6b7280' }
+            }
+          },
+          plugins:{
+            legend: { display: false },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              backgroundColor: 'rgba(0,0,0,0.8)',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              borderColor: '#16a34a',
+              borderWidth: 1
+            }
+          },
+          interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
+          }
+        }
       });
 
-      // 更新电器推荐
-      updateAppliances(data.appliances, current);
+      // Update recommendations
+      updateAppliances(data.appliances || [], current);
     }
 
-    // 渲染电器列表
-    function updateAppliances(appliances, intensity) {
-      const container = document.getElementById('recommendationList');
-      container.innerHTML = '';
-      if (!appliances.length) {
-        container.innerHTML = '<p style="text-align:center;">No appliances found.</p>';
+    function updateAppliances(appliances, intensity){
+      const box = document.getElementById('recommendationList');
+      box.innerHTML = '';
+
+      if (!appliances.length){
+        box.innerHTML = '<p style="text-align:center;color:#64748b;padding:20px;">No appliances found. <a href="/appliances" style="color:#16a34a;">Add some appliances</a> to get recommendations.</p>';
         return;
       }
+
       appliances.forEach(app => {
-        let status, cls;
-        if (intensity < 100)      { status = 'Run Now';  cls = 'status-good'; }
-        else if (intensity < 150) { status = 'Wait 1hr'; cls = 'status-wait'; }
-        else                      { status = 'Avoid Now';cls = 'status-avoid'; }
-        container.insertAdjacentHTML('beforeend', `
-          <div class="appliance">
-            <div class="appliance-info">
+        let label, cls;
+        if (intensity < 100){
+          label = 'Run Now'; cls = 'good';
+        } else if (intensity < 150){
+          label = 'Wait ~1h'; cls = 'wait';
+        } else {
+          label = 'Avoid Now'; cls = 'avoid';
+        }
+
+        box.insertAdjacentHTML('beforeend', `
+          <div class="row">
+            <div class="appl">
               <h4>${app.name}</h4>
-              <p>${(app.wattage/1000).toFixed(2)} kW</p>
+              <p>${(app.wattage/1000).toFixed(2)} kW • Estimated usage</p>
             </div>
-            <span class="appliance-status ${cls}">${status}</span>
+            <span class="tag ${cls}">${label}</span>
           </div>
         `);
       });
     }
 
-    // 仅调用一次后端聚合接口
+    // Load dashboard data
     fetch('/api/dashboard-data')
-      .then(res => res.json())
+      .then(r => r.json())
       .then(updateDashboard)
-      .catch(err => console.error('Dashboard load failed:', err));
+      .catch(err => {
+        console.error('Dashboard load failed:', err);
+        const box = document.getElementById('recommendationList');
+        box.innerHTML = '<div class="error-state">Unable to load recommendations. Please refresh the page.</div>';
+        document.getElementById('intensity').textContent = '–';
+        const s = document.getElementById('status');
+        s.className='chip bad'; s.textContent='Unavailable';
+      });
   </script>
 </body>
 </html>

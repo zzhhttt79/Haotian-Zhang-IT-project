@@ -176,8 +176,8 @@ def smart_recommendation():
 
         # 按 avg_ci 排序，取前 3
         best3 = sorted(windows, key=lambda w: w['avg_ci'])[:3]
-        note  = (f"推荐时段：{best3[0]['time']}，"
-                 f"平均碳强度 {best3[0]['avg_ci']} gCO₂/kWh。")
+        note  = (f"Recommended period：{best3[0]['time']}，"
+                 f"avg carbon intensity {best3[0]['avg_ci']} gCO₂/kWh。")
 
         recommendations.append({
             'name': app.name,
@@ -242,7 +242,7 @@ def preferences():
         current_user.weight_price = wp/s
         current_user.weight_flex  = wu/s
         db.session.commit()
-        flash('设置已保存', 'success')
+        flash('setting saved', 'success')
     return render_template('preferences.html')
 
 if __name__ == '__main__':
