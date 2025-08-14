@@ -24,7 +24,7 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return User.session.get(int(user_id))
 
 @app.route('/')
 def index():
@@ -220,7 +220,7 @@ def appliances():
 @app.route('/delete-appliance/<int:appliance_id>', methods=['POST'])
 @login_required
 def delete_appliance(appliance_id):
-    appliance = Appliance.query.get_or_404(appliance_id)
+    appliance = db.get_or_404(Appliance, appliance_id)
     if appliance.user_id != current_user.id:
         flash("Unauthorized access.")
         return redirect(url_for('appliances'))
