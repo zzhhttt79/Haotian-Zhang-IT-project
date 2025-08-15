@@ -1,3 +1,6 @@
+已按你的要求把 Dashboard 的“智能推荐”改成与主页一致的加载与样式，同时保留 appliances 的兜底逻辑。完整代码如下（已用注释标出关键改动点）：
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -249,7 +252,7 @@
       color:var(--ink-900);
     }
 
-    /* Enhanced Recommendations */
+    /* Enhanced Recommendations (fallback rows) */
     #recommendationList .row{
       display:flex; align-items:center; justify-content:space-between;
       padding:16px 0; border-bottom:1px solid #f0f0f0;
@@ -314,6 +317,32 @@
       color:var(--bad-text); padding:16px; border-radius:12px;
       text-align:center; font-weight:600;
     }
+
+    /* --- NEW: 首页同款“推荐卡片”样式（用于 /smart-recommendation） --- */
+    .recommendation-card{
+      background:#fafafa;
+      border:1px solid var(--card-br);
+      border-radius:12px;
+      padding:14px 16px;
+      margin-bottom:12px;
+    }
+    .recommendation-card h4{
+      font-size: clamp(0.95rem, 2vw, 1.1rem);
+      font-weight:700;
+      color:var(--ink-900);
+      margin-bottom:6px;
+    }
+    .recommendation-card ul{
+      margin: 6px 0 0;
+      padding-left: 18px;
+      color: var(--ink-700);
+    }
+    .recommendation-card .note{
+      color:var(--ink-500);
+      font-size:.9rem;
+      margin-top:8px;
+    }
+    /* --- END NEW --- */
 
     /* Mobile Responsiveness */
     @media (max-width: 768px) {
@@ -460,10 +489,10 @@
 
     <!-- 24-Hour Forecast Card -->
     <div class="card">
-      <div class="card-head"><span class="emoji">📈</span> 24‑Hour Forecast</div>
+      <div class="card-head"><span class="emoji">📈</span> 24-Hour Forecast</div>
       <div class="chart-box"><canvas id="chart"></canvas></div>
       <div class="summary">
-        <strong>Today's Summary:</strong> Best window for high‑energy tasks is 2PM–4PM. Avoid evening peak hours (6PM–8PM).
+        <strong>Today's Summary:</strong> Best window for high-energy tasks is 2PM–4PM. Avoid evening peak hours (6PM–8PM).
       </div>
     </div>
   </section>
@@ -528,6 +557,11 @@
     // Update dashboard with data
     function updateDashboard(data){
       const current = data.intensity;
+
+      // --- NEW: 缓存当前强度与设备列表，供推荐兜底使用 ---
+      window.__currentIntensity = current;
+      window.__appliances = Array.isArray(data.appliances) ? data.appliances : [];
+      // --- END NEW ---
 
       // Update intensity display
       const intensityEl = document.getElementById('intensity');
@@ -601,10 +635,11 @@
         }
       });
 
-      // Update recommendations
-      updateAppliances(data.appliances || [], current);
+      // --- REMOVED: 不再在这里直接用 appliances 渲染推荐，改为与首页一致的单独加载 ---
+      // updateAppliances(data.appliances || [], current);
     }
 
+    // 原有 appliances 兜底渲染（保留）
     function updateAppliances(appliances, intensity){
       const box = document.getElementById('recommendationList');
       box.innerHTML = '';
@@ -636,10 +671,63 @@
       });
     }
 
+    // --- NEW: 与首页一致的智能推荐加载逻辑 ---
+    async function loadRecommendations(){
+      const target = document.getElementById('recommendationList');
+      if(!target) return;
+
+      target.innerHTML = '<p style="color:var(--ink-500); text-align:center; padding:20px;">Loading recommendation…</p>';
+
+      try{
+        const res = await fetch('/smart-recommendation');
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const recs = data && Array.isArray(data.recommendations) ? data.recommendations : [];
+
+        if(recs.length){
+          target.innerHTML = '';
+          recs.forEach(rec=>{
+            const el = document.createElement('div');
+            el.className = 'recommendation-card';
+            el.innerHTML = `
+              <h4>${rec.name}</h4>
+              <ul>
+                ${(rec.windows || []).map(w => `
+                  <li><strong>${w.time}</strong> — Avg <strong>${w.avg_ci} gCO₂/kWh</strong></li>
+                `).join('')}
+              </ul>
+              ${rec.note ? `<p class="note">${rec.note}</p>` : '' }
+            `;
+            target.appendChild(el);
+          });
+          return; // 成功渲染完毕
+        }
+
+        // 无数据 → 兜底
+        fallbackToAppliances();
+
+      }catch(err){
+        console.error('Recommendation load failed:', err);
+        // 请求失败 → 兜底
+        fallbackToAppliances();
+      }
+    }
+
+    function fallbackToAppliances(){
+      const appliances = window.__appliances || [];
+      const intensity = typeof window.__currentIntensity === 'number' ? window.__currentIntensity : 999;
+      updateAppliances(appliances, intensity);
+    }
+    // --- END NEW ---
+
     // Load dashboard data
     fetch('/api/dashboard-data')
       .then(r => r.json())
-      .then(updateDashboard)
+      .then(data => {
+        updateDashboard(data);
+        // --- NEW: 与首页一致，单独加载推荐 ---
+        loadRecommendations();
+      })
       .catch(err => {
         console.error('Dashboard load failed:', err);
         const box = document.getElementById('recommendationList');
@@ -651,3 +739,4 @@
   </script>
 </body>
 </html>
+```
