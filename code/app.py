@@ -141,73 +141,77 @@ def current_intensity():
 @app.route('/smart-recommendation')
 @login_required
 def smart_recommendation():
-    try:
-        # 1) 读取当前用户设备
-        appliances = Appliance.query.filter_by(user_id=current_user.id).all()
-        if not appliances:
-            return jsonify(recommendations=[])
+    print("smart_recommendation FIX v3 is running")
+    # 1) 读取当前用户设备
+    appliances = Appliance.query.filter_by(user_id=current_user.id).all()
+    if not appliances:
+        return jsonify(recommendations=[])
 
-        # 2) 拉取未来 24h 预测（URL 显式带 Z；整点对齐）
-        now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
-        to  = now + timedelta(hours=24)
-        ci_url = (
-            f"https://api.carbonintensity.org.uk/intensity/"
-            f"{now.strftime('%Y-%m-%dT%H:00Z')}/{to.strftime('%Y-%m-%dT%H:00Z')}"
-        )
+    # 2) 拉取未来 24h 预测（URL 显式带 Z；整点对齐）
+    now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    to = now + timedelta(hours=24)
+    ci_url = (
+        f"https://api.carbonintensity.org.uk/intensity/"
+        f"{now.strftime('%Y-%m-%dT%H:00Z')}/{to.strftime('%Y-%m-%dT%H:00Z')}"
+    )
+
+    try:
         resp = requests.get(ci_url, timeout=10)
         resp.raise_for_status()
         entries = resp.json().get('data', [])
-
-        # 3) 解析时间：把 '...Z' 变成 '+00:00'，fromisoformat 才能识别
-        def _parse_ci_time(s: str):
-            if s.endswith('Z'):
-                s = s[:-1] + '+00:00'
-            return datetime.fromisoformat(s)
-
-        ci_series = []
-        for e in entries:
-            try:
-                frm = e.get('from', '')
-                fc  = (e.get('intensity') or {}).get('forecast')
-                if frm and fc is not None:
-                    dt = _parse_ci_time(frm)
-                    ci_series.append((dt, fc))
-            except Exception:
-                # 忽略个别坏记录
-                continue
-
-        if len(ci_series) < 2:
-            return jsonify(recommendations=[])
-
-        # 4) 为每个设备找 Top-3 最低平均碳强度 1 小时时窗
-        window_size = 2  # 两个 30min 段 = 1 小时
-        recommendations = []
-
-        for app_ in appliances:
-            windows = []
-            for i in range(len(ci_series) - window_size + 1):
-                slice_ = ci_series[i:i+window_size]
-                avg_ci = mean(v for _, v in slice_)
-                start  = slice_[0][0]
-                end    = start + timedelta(minutes=30 * window_size)
-                windows.append({
-                    'time': f"{start.strftime('%H:%M')}–{end.strftime('%H:%M')}",
-                    'avg_ci': round(avg_ci, 1)
-                })
-
-            best3 = sorted(windows, key=lambda w: w['avg_ci'])[:3]
-            note  = (
-                f"Recommended period：{best3[0]['time']}，avg carbon intensity {best3[0]['avg_ci']} gCO₂/kWh。"
-                if best3 else "No window available."
-            )
-            recommendations.append({'name': app_.name, 'windows': best3, 'note': note})
-
-        return jsonify(recommendations=recommendations)
-
     except Exception as e:
-        # 网络受限/解析异常时不再 500，直接兜底给空结果
-        print('smart_recommendation error:', e)
+        # PythonAnywhere 免费版可能拦外网；兜底避免 500
+        print("smart_recommendation fetch error:", e)
         return jsonify(recommendations=[])
+
+    # 3) 解析 '...Z' 时间为 fromisoformat 可识别
+    def _parse_ci_time(s: str):
+        if isinstance(s, str) and s.endswith('Z'):
+            s = s[:-1] + '+00:00'
+        return datetime.fromisoformat(s)
+
+    ci_series = []
+    for e in entries:
+        frm = e.get('from')
+        intensity = e.get('intensity') or {}
+        fc = intensity.get('forecast')
+        if not frm or fc is None:
+            continue
+        try:
+            dt = _parse_ci_time(frm)
+        except Exception as err:
+            print("smart_recommendation parse err:", err, frm)
+            continue
+        ci_series.append((dt, fc))
+
+    if len(ci_series) < 2:
+        return jsonify(recommendations=[])
+
+    # 4) 为每个设备找 Top-3 最低平均碳强度 1 小时时窗
+    window_size = 2  # 两个 30 分钟段 = 1 小时
+    recommendations = []
+
+    for app_ in appliances:
+        windows = []
+        for i in range(len(ci_series) - window_size + 1):
+            slice_ = ci_series[i:i + window_size]
+            avg_ci = mean(v for _, v in slice_)
+            start = slice_[0][0]
+            end = start + timedelta(minutes=30 * window_size)
+            windows.append({
+                "time": f"{start.strftime('%H:%M')}–{end.strftime('%H:%M')}",
+                "avg_ci": round(avg_ci, 1)
+            })
+
+        best3 = sorted(windows, key=lambda w: w["avg_ci"])[:3]
+        note = (
+            f"Recommended period：{best3[0]['time']}，avg carbon intensity {best3[0]['avg_ci']} gCO₂/kWh。"
+            if best3 else "No window available."
+        )
+        recommendations.append({"name": app_.name, "windows": best3, "note": note})
+
+    return jsonify(recommendations=recommendations)
+
 
 
 @app.route('/appliances', methods=['GET', 'POST'])
