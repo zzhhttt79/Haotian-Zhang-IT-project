@@ -4,7 +4,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 import os
 
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from statistics import mean
 from models import db, User, Appliance
 from forms import RegisterForm, LoginForm, ApplianceForm
@@ -12,6 +12,9 @@ from config import Config
 
 from dotenv import load_dotenv
 load_dotenv()
+def utcnow():
+    # 返回时区感知的 UTC 时间，避免 datetime.utcnow() 弃用警告
+    return datetime.now(timezone.utc).replace(microsecond=0)
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -77,7 +80,7 @@ def dashboard_data():
         ci = None
 
     # 2) 24h 预测
-    now = datetime.utcnow()
+    now = utcnow()
     ft = now.strftime('%Y-%m-%dT%H:00Z')
     tt = (now + timedelta(hours=24)).strftime('%Y-%m-%dT%H:00Z')
     try:
@@ -99,6 +102,72 @@ def dashboard_data():
         'appliances': appliances
     })
 
+@app.route('/api/ci/forecast48h')
+@login_required
+def ci_forecast_48h():
+    # 中文注释：未来 48 小时预测；只返回有 forecast 的点，并转成数字
+    start = utcnow().replace(minute=0, second=0)
+    end   = start + timedelta(hours=48)
+    url = (
+        "https://api.carbonintensity.org.uk/intensity/"
+        f"{start.strftime('%Y-%m-%dT%H:00Z')}/{end.strftime('%Y-%m-%dT%H:00Z')}"
+    )
+    try:
+        r = requests.get(url, timeout=10)
+        r.raise_for_status()
+        items = r.json().get('data', [])
+
+        labels, values = [], []
+        for it in items:
+            fc = it.get('intensity', {}).get('forecast')
+            if fc is None:
+                continue  # 跳过空值，避免前端画不出线
+            # 标签显示 "MM-DD HH:MM" 更清晰
+            lab = it['from'][5:16].replace('T', ' ')
+            labels.append(lab)
+            values.append(int(fc))
+
+        return jsonify({'labels': labels, 'values': values})
+    except Exception as e:
+        print('forecast48h error:', e)
+        return jsonify({'labels': [], 'values': []}), 500
+
+
+@app.route('/api/ci/history')
+@login_required
+def ci_history():
+    # 中文注释：历史数据，默认 2 天（≈48 小时）
+    days = int(request.args.get('days', 2))
+    end   = utcnow().replace(minute=0, second=0)
+    start = end - timedelta(days=days)
+    url = (
+        "https://api.carbonintensity.org.uk/intensity/"
+        f"{start.strftime('%Y-%m-%dT%H:00Z')}/{end.strftime('%Y-%m-%dT%H:00Z')}"
+    )
+    try:
+        r = requests.get(url, timeout=10)
+        r.raise_for_status()
+        items = r.json().get('data', [])
+
+        labels, actuals, forecasts = [], [], []
+        for it in items:
+            a = it.get('intensity', {}).get('actual')
+            f = it.get('intensity', {}).get('forecast')
+            # 两个都空就跳过，避免整行无意义
+            if a is None and f is None:
+                continue
+            lab = it['from'][5:16].replace('T', ' ')
+            labels.append(lab)
+            # 保留 None 作为“折线断点”，其它转为数字
+            actuals.append(None if a is None else int(a))
+            forecasts.append(None if f is None else int(f))
+
+        return jsonify({'labels': labels, 'actuals': actuals, 'forecasts': forecasts})
+    except Exception as e:
+        print('history error:', e)
+        return jsonify({'labels': [], 'actuals': [], 'forecasts': []}), 500
+
+
 @app.route('/logout')
 @login_required
 def logout():
@@ -107,7 +176,7 @@ def logout():
 
 @app.route('/carbon-data')
 def carbon_data():
-    now = datetime.utcnow()
+    now = utcnow()
     from_time = now.strftime('%Y-%m-%dT%H:00Z')
     to_time = (now + timedelta(hours=24)).strftime('%Y-%m-%dT%H:00Z')
     url = f'https://api.carbonintensity.org.uk/intensity/{from_time}/{to_time}'
@@ -148,7 +217,7 @@ def smart_recommendation():
         return jsonify(recommendations=[])
 
     # 2) 拉取未来 24h 预测（URL 显式带 Z；整点对齐）
-    now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    now = utcnow().replace(minute=0, second=0, microsecond=0)
     to = now + timedelta(hours=24)
     ci_url = (
         f"https://api.carbonintensity.org.uk/intensity/"

@@ -577,7 +577,11 @@
             <div class="nav-links" id="navLinks">
                 <a href="/" class="active">Home</a>
                 <a href="/appliances">My Appliances</a>
-                <a href="/login" class="btn-outline">Login</a>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('dashboard') }}" class="btn-outline">Dashboard</a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn-outline">Login</a>
+                {% endif %}
             </div>
         </div>
     </nav>
@@ -759,9 +763,7 @@
                 navToggle.classList.remove('active');
             }
         });
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
+
 fetch('/carbon-data')
   .then(res => res.json())
   .then(data => {

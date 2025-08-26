@@ -4,7 +4,12 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Carbon Smart • Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // 正确输出布尔值，且不要放在带 src 的 <script> 里
+  window.__isAuthenticated = {{ current_user.is_authenticated | tojson }};
+</script>
+
 
   <style>
     :root{
@@ -440,7 +445,11 @@
       <div class="nav-links" id="navLinks">
         <a href="/">Home</a>
         <a href="/appliances">My Appliances</a>
-        <a href="/login" class="btn-outline">Login</a>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('logout') }}" class="btn-outline">Logout</a>
+        {% else %}
+        <a href="{{ url_for('login') }}" class="btn-outline">Login</a>
+        {% endif %}
       </div>
     </div>
   </nav>
@@ -449,7 +458,6 @@
   <div class="pagehead">
     <div class="wrap">
       <h1>Live Carbon Intensity Data</h1>
-      <p>Personalized suggestions updated every 30 minutes</p>
     </div>
   </div>
 
@@ -483,6 +491,17 @@
         <p style="color:var(--ink-500); text-align:center; padding:20px;">Loading your appliances…</p>
       </div>
     </div>
+
+    <!-- 48-hour forecast & history card -->
+<div class="card">
+  <!-- 48 小时预测（标题英文，注释中文） -->
+  <h3 style="margin-bottom:8px;">48-hour Forecast (gCO₂/kWh)</h3>
+  <div class="chart-box"><canvas id="ciForecast48"></canvas></div>
+
+  <!-- 历史数据（可选择范围，先用 days=2 示例） -->
+  <h3 style="margin:12px 0 8px;">History (selectable)</h3>
+  <div class="chart-box"><canvas id="ciHistory"></canvas></div>
+</div>
 
     <!-- 24-Hour Forecast Card -->
     <div class="card">
@@ -669,46 +688,59 @@
     }
 
     // --- NEW: 与首页一致的智能推荐加载逻辑 ---
-    async function loadRecommendations(){
-      const target = document.getElementById('recommendationList');
-      if(!target) return;
+async function loadRecommendations(){
+  const target = document.getElementById('recommendationList');
+  if(!target) return;
 
-      target.innerHTML = '<p style="color:var(--ink-500); text-align:center; padding:20px;">Loading recommendation…</p>';
+  // 未登录 → 不请求受保护接口，直接显示 CTA
+  if(!window.__isAuthenticated){
+    target.innerHTML = `
+      <p style="color:var(--ink-500); text-align:center; padding:20px;">
+        Sign up or log in to see personalized recommendations.
+      </p>`;
+    return;
+  }
 
-      try{
-        const res = await fetch('/smart-recommendation');
-        if(!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        const recs = data && Array.isArray(data.recommendations) ? data.recommendations : [];
+  target.innerHTML = '<p style="color:var(--ink-500); text-align:center; padding:20px;">Loading recommendation…</p>';
 
-        if(recs.length){
-          target.innerHTML = '';
-          recs.forEach(rec=>{
-            const el = document.createElement('div');
-            el.className = 'recommendation-card';
-            el.innerHTML = `
-              <h4>${rec.name}</h4>
-              <ul>
-                ${(rec.windows || []).map(w => `
-                  <li><strong>${w.time}</strong> — Avg <strong>${w.avg_ci} gCO₂/kWh</strong></li>
-                `).join('')}
-              </ul>
-              ${rec.note ? `<p class="note">${rec.note}</p>` : '' }
-            `;
-            target.appendChild(el);
-          });
-          return; // 成功渲染完毕
-        }
+  try{
+    const res = await fetch('/smart-recommendation', { headers: { 'Accept': 'application/json' } });
+    // 如果被重定向到登录页（返回 HTML 而不是 JSON），做兜底
+    const ct = res.headers.get('content-type') || '';
+    if(!res.ok || !ct.includes('application/json')) throw new Error('unauthorized');
 
-        // 无数据 → 兜底
-        fallbackToAppliances();
+    const data = await res.json();
+    const recs = Array.isArray(data.recommendations) ? data.recommendations : [];
 
-      }catch(err){
-        console.error('Recommendation load failed:', err);
-        // 请求失败 → 兜底
-        fallbackToAppliances();
-      }
+    if(recs.length){
+      target.innerHTML = '';
+      recs.forEach(rec=>{
+        const el = document.createElement('div');
+        el.className = 'recommendation-card';
+        el.innerHTML = `
+          <h4>${rec.name}</h4>
+          <ul>
+            ${(rec.windows || []).map(w => `
+              <li><strong>${w.time}</strong> — Avg <strong>${w.avg_ci} gCO₂/kWh</strong></li>
+            `).join('')}
+          </ul>
+          ${rec.note ? `<p class="note">${rec.note}</p>` : '' }
+        `;
+        target.appendChild(el);
+      });
+      return;
     }
+
+    // 无数据 → 兜底到本地设备+当前强度
+    fallbackToAppliances();
+
+  }catch(err){
+    console.error('Recommendation load failed:', err);
+    // 请求失败 → 兜底
+    fallbackToAppliances();
+  }
+}
+
 
     function fallbackToAppliances(){
       const appliances = window.__appliances || [];
@@ -717,23 +749,128 @@
     }
     // --- END NEW ---
 
-    // Load dashboard data
-    fetch('/api/dashboard-data')
-      .then(r => r.json())
-      .then(data => {
-        updateDashboard(data);
-        // --- NEW: 与首页一致，单独加载推荐 ---
-        loadRecommendations();
-      })
-      .catch(err => {
-        console.error('Dashboard load failed:', err);
-        const box = document.getElementById('recommendationList');
-        box.innerHTML = '<div class="error-state">Unable to load recommendations. Please refresh the page.</div>';
-        document.getElementById('intensity').textContent = '–';
-        const s = document.getElementById('status');
-        s.className='chip bad'; s.textContent='Unavailable';
-      });
-  </script>
+
+// 48 小时预测（样式对齐 24h）
+async function drawForecast48(){
+  const res = await fetch('/api/ci/forecast48h');
+  const data = await res.json();
+
+  const pairs = (data.labels || []).map((lab, i) => [lab, data.values?.[i]]);
+  const cleaned = pairs.filter(([, v]) => v !== null && v !== undefined && !Number.isNaN(Number(v)));
+  const labels = cleaned.map(p => p[0]);
+  const values = cleaned.map(p => Number(p[1]));
+
+  const ctx = document.getElementById('ciForecast48').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Forecast',
+        data: values,
+        fill: true,
+        backgroundColor: 'rgba(22,163,74,0.10)',
+        borderColor: '#16a34a',
+        borderWidth: 3,
+        tension: 0.4,
+        pointRadius: 0,
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#16a34a',
+        pointHoverBorderColor: '#fff',
+        pointHoverBorderWidth: 2
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      responsive: true,
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#6b7280', maxRotation: 60, minRotation: 45 } },
+        y: { grid: { color: '#e5e7eb' },    ticks: { color: '#6b7280' } }
+      },
+      plugins: {
+        legend: { display: true },
+        tooltip: {
+          mode: 'index', intersect: false,
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          titleColor: '#fff', bodyColor: '#fff',
+          borderColor: '#16a34a', borderWidth: 1,
+          callbacks: { label: (ctx) => `${ctx.parsed.y} gCO₂/kWh` }
+        }
+      },
+      interaction: { mode: 'nearest', axis: 'x', intersect: false }
+    }
+  });
+}
+
+// 历史（Actual/Forecast，两条线；遇 null 断线）
+async function drawHistory(days = 2){
+  const res = await fetch(`/api/ci/history?days=${days}`);
+  const data = await res.json();
+
+  const labels    = data.labels || [];
+  const actuals   = labels.map((_, i) => (data.actuals?.[i] ?? null));
+  const forecasts = labels.map((_, i) => (data.forecasts?.[i] ?? null));
+
+  const ctx = document.getElementById('ciHistory').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Actual',   data: actuals.map(v => (v==null?null:Number(v))),   fill: false, borderColor: '#3b82f6', borderWidth: 2, tension: 0.3, pointRadius: 0 },
+        { label: 'Forecast', data: forecasts.map(v => (v==null?null:Number(v))), fill: false, borderColor: '#ef4444', borderWidth: 2, borderDash:[6,4], tension: 0.3, pointRadius: 0 }
+      ]
+    },
+    options: {
+      maintainAspectRatio: false,
+      responsive: true,
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#6b7280', maxRotation: 60, minRotation: 45 } },
+        y: { grid: { color: '#e5e7eb' },    ticks: { color: '#6b7280' } }
+      },
+      plugins: {
+        legend: { display: true },
+        tooltip: {
+          mode: 'index', intersect: false,
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          titleColor: '#fff', bodyColor: '#fff',
+          borderColor: '#16a34a', borderWidth: 1,
+          callbacks: { label: (ctx) => (ctx.parsed.y==null ? '—' : `${ctx.parsed.y} gCO₂/kWh`) }
+        }
+      },
+      spanGaps: false,
+      interaction: { mode: 'nearest', axis: 'x', intersect: false }
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('[dashboard] boot');
+
+  // 1) 先画 48 小时预测 和 历史
+  drawForecast48();
+  drawHistory(2);
+
+  // 2) 再加载 24h 数据 + 智能推荐
+  fetch('/api/dashboard-data', { headers: { 'Accept': 'application/json' }})
+    .then(r => r.json())
+    .then(data => {
+      updateDashboard(data);
+      loadRecommendations();
+    })
+    .catch(err => {
+      console.error('Dashboard load failed:', err);
+      const box = document.getElementById('recommendationList');
+      if (box) box.innerHTML =
+        '<div class="error-state">Unable to load recommendations. Please refresh the page.</div>';
+      const v = document.getElementById('intensity');
+      if (v) v.textContent = '–';
+      const s = document.getElementById('status');
+      if (s) { s.className = 'chip bad'; s.textContent = 'Unavailable'; }
+    });
+});
+
+</script>
 </body>
 </html>
 ```
