@@ -325,20 +325,7 @@ def delete_appliance(appliance_id):
     flash("Appliance deleted.")
     return redirect(url_for('appliances'))
 
-@app.route('/preferences', methods=['GET','POST'])
-@login_required
-def preferences():
-    if request.method == 'POST':
-        wci = float(request.form['weight_ci'])
-        wp  = float(request.form['weight_price'])
-        wu  = float(request.form['weight_flex'])
-        s   = wci + wp + wu or 1
-        current_user.weight_ci    = wci/s
-        current_user.weight_price = wp/s
-        current_user.weight_flex  = wu/s
-        db.session.commit()
-        flash('setting saved', 'success')
-    return render_template('preferences.html')
+
 
 if __name__ == '__main__':
     with app.app_context():

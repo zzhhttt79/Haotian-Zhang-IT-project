@@ -763,7 +763,7 @@
                 navToggle.classList.remove('active');
             }
         });
-
+ // —— 2. 24h 预测图表 ——
 fetch('/carbon-data')
   .then(res => res.json())
   .then(data => {
@@ -819,38 +819,6 @@ fetch('/carbon-data')
       document.getElementById('live-intensity').textContent = 'Error';
     });
 
-  // —— 2. 24h 预测图表 ——
-  fetch('/carbon-data')
-    .then(r => r.json())
-    .then(data => {
-      const ctx = document.getElementById('carbonChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: data.labels,
-          datasets: [{
-            label: 'Forecast (gCO₂/kWh)',
-            data: data.values,
-            fill: true,
-            tension: 0.3,
-            borderColor: '#28a745',
-            backgroundColor: 'rgba(40,167,69,0.1)',
-            pointRadius: 3
-          }]
-        },
-        options: {
-          scales: {
-            x: { title: { display: true, text: 'Time (UTC)' } },
-            y: { title: { display: true, text: 'gCO₂/kWh' }, beginAtZero: false }
-          },
-          plugins: {
-            tooltip: { callbacks: { label: ctx => ctx.parsed.y + ' gCO₂/kWh' } }
-          },
-          maintainAspectRatio: false
-        }
-      });
-    })
-    .catch(err => console.error('Error loading forecast data:', err));
 
   // —— 3. 智能推荐 ——
   fetch('/smart-recommendation')
@@ -880,9 +848,6 @@ fetch('/carbon-data')
         '<p>Unable to load recommendation.</p>';
     });
 </script>
-
-
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>

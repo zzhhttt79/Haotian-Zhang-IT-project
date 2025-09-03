@@ -1,6 +1,0 @@
-<form method="POST" action="{{ url_for('preferences') }}">
-  <label>低碳优先 ({{ current_user.weight_ci }})</label>
-  <input type="range" name="weight_ci" min="0" max="1" step="0.01" value="{{ current_user.weight_ci }}">
-  <!-- 类似地为成本和灵活度做两个滑块 -->
-  <button type="submit">保存设置</button>
-</form>
